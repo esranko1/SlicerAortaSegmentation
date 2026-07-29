@@ -5,5 +5,15 @@
   "scm_revision": "main",
   "scm_type": "git",
   "enabled": true,
-  "tier": 1
+  "tier": 1,
+  "dependencies": [
+    {
+      "name": "PyTorch",
+      "version": "2.0"
+    },
+    {
+      "name": "NNUNet",
+      "version": "2.0"
+    }
+  ]
 }

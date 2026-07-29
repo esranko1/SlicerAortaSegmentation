@@ -41,10 +41,9 @@ class AortaSegmentation(ScriptedLoadableModule):
         self.parent.contributors = ["Eszter Sranko"]
         self.parent.helpText = _("""
 Segments the aorta from a single MRI volume using a pretrained nnU-Net model.
-Requires PyTorch and nnU-Net installed in Slicer's Python environment beforehand
-(see the README). Select an input volume and an output segmentation, then click
-Apply. First use downloads the trained model weights, which requires an internet
-connection.
+Requires PyTorch and NNuNet extensions (install via Extensions Manager).
+Select an input volume and an output segmentation, then click Apply.
+First use downloads the trained model weights, which requires an internet connection.
 """)
         self.parent.acknowledgementText = _("""
 Segmentation is performed by a custom-trained nnU-Net v2 model. nnU-Net is not
@@ -183,19 +182,19 @@ class AortaSegmentationLogic(ScriptedLoadableModuleLogic):
         return AortaSegmentationParameterNode(super().getParameterNode())
 
     def _ensureDependencies(self):
-        """Checks that PyTorch and nnU-Net are importable in Slicer's Python environment.
-        Installing them isn't attempted here -- pip installing into Slicer's embedded
-        Python from inside the app produced opaque, hard-to-diagnose failures. Install
-        them manually first (see the README), then this just passes through."""
+        """Ensures PyTorch and nnU-Net are available via their Slicer extensions."""
         try:
-            import torch  # noqa: F401
-            import nnunetv2  # noqa: F401
+            from PyTorchUtils import PyTorchUtils
+            torch_utils = PyTorchUtils()
+            torch_utils.torch  # Ensures PyTorch is installed/available
+
+            from nnunetv2 import nnunetv2
+            nnunetv2  # noqa: F841
         except ImportError as e:
             raise RuntimeError(
                 _(
-                    "This module requires PyTorch and nnU-Net, which aren't installed in Slicer's "
-                    "Python environment. Install them manually first (see the README's dependency "
-                    "installation instructions), then click Apply again."
+                    "This module requires PyTorch and NNuNet extensions. "
+                    "Please install them from the Extensions Manager."
                 )
             ) from e
 
