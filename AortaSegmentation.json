@@ -6,14 +6,8 @@
   "scm_type": "git",
   "enabled": true,
   "tier": 1,
-  "dependencies": [
-    {
-      "name": "PyTorch",
-      "version": "2.0"
-    },
-    {
-      "name": "NNUNet",
-      "version": "2.0"
-    }
+  "build_dependencies": [
+    "PyTorch",
+    "NNUNet"
   ]
 }
