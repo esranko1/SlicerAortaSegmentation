@@ -62,17 +62,10 @@ def main() -> int:
 
     def build_predictor(device):
         predictor = nnUNetPredictor(
-            # 0.8 vs the nnU-Net default of 0.5: fewer overlapping sliding-window tiles.
-            # TotalSegmentator's own benchmarking found this near-free (~0.001 Dice) while
-            # cutting meaningful CPU runtime (see wasserth/TotalSegmentator nnunet.py).
+        
             tile_step_size=0.8,
             use_gaussian=True,
             use_mirroring=True,
-            # False keeps the accumulated prediction volume on host RAM instead of GPU
-            # VRAM (individual tile forward-passes still run on the GPU). True crashes
-            # with a CUDA OOM on small/shared GPUs -- confirmed on a 2GB vGPU slice
-            # (NVIDIA L4-2Q) where the full accumulator didn't fit alongside the model
-            # and activations.
             perform_everything_on_device=False,
             device=device,
             verbose=True,
@@ -83,14 +76,6 @@ def main() -> int:
         return predictor
 
     def run_prediction(predictor):
-        # predict_from_files_sequential (not predict_from_files): nnU-Net's regular
-        # predict_from_files always spawns worker processes via
-        # multiprocessing.get_context("spawn").Pool(...), even when num_processes=1. Inside
-        # Slicer's embedded Python on Windows, sys.executable resolves to Slicer itself, so
-        # a spawned "worker" actually relaunches the full Slicer application, which then
-        # crashes trying to boot as a module host. predict_from_files_sequential runs
-        # entirely in this process instead - no multiprocessing, no spawn. Since this script
-        # only ever segments one volume at a time, there's no parallelism to lose anyway.
         predictor.predict_from_files_sequential(
             str(args.input_dir),
             str(args.output_dir),
@@ -105,11 +90,6 @@ def main() -> int:
     try:
         run_prediction(build_predictor(device))
     except RuntimeError as e:
-        # A CUDA OOM here can recur on GPUs with very little VRAM even after freeing
-        # memory between runs (confirmed on a 2GB vGPU slice), and can leave the CUDA
-        # context itself unusable for the rest of this process -- so this deliberately
-        # avoids any further torch.cuda.* calls and falls back to a fresh CPU predictor
-        # instead of retrying on the same device.
         if device.type == "cuda" and "out of memory" in str(e).lower():
             print("CUDA ran out of memory; retrying on CPU...", flush=True)
             run_prediction(build_predictor(torch.device("cpu")))
