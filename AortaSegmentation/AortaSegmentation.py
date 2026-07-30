@@ -184,8 +184,8 @@ class AortaSegmentationLogic(ScriptedLoadableModuleLogic):
     def _ensureDependencies(self):
         """Ensures PyTorch and nnU-Net are available via their Slicer extensions."""
         try:
-            import torch  # noqa: F401
-            import nnunetv2  # noqa: F401
+            import torch  
+            import nnunetv2
         except ImportError as e:
             raise RuntimeError(
                 _(

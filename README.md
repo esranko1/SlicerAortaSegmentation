@@ -9,19 +9,17 @@ Mean validation Dice (fold 0, internal validation set): **0.90**. This is a rese
 ## Requirements
 
 - [3D Slicer](https://download.slicer.org/) 5.6 or later (developed against 5.10.0)
-- Internet connection the first time you run the module (it downloads PyTorch, nnU-Net, and the model weights — a few hundred MB total, one-time)
-- Optional: an NVIDIA GPU. The module auto-detects one and installs the matching CUDA build of PyTorch; without a GPU it falls back to CPU, which works but is considerably slower.
+- PyTorch and NNuNet extensions (automatically installed via Extensions Manager)
+- Internet connection on first use to download model weights (~100 MB, one-time)
+- Optional: an NVIDIA GPU. The module auto-detects CUDA and uses GPU if available; without a GPU it falls back to CPU, which works but is considerably slower.
 
 ## Installation
 
-This extension isn't published in the Slicer Extension Manager yet, so install it manually:
+Install via the **Slicer Extension Manager**:
 
-1. Clone this repository:
-   ```bash
-   git clone https://github.com/esranko1/SlicerAortaSegmentation.git
-   ```
-2. In Slicer, go to **Edit → Application Settings → Modules**.
-3. Under **Additional module paths**, click **Add** and select the `AortaSegmentation` folder inside the cloned repo (the one containing `AortaSegmentation.py`).
+1. In Slicer, go to **Modules → Extension Manager**.
+2. Search for **"Aorta Segmentation"**.
+3. Click **Install** (this also installs required dependencies: PyTorch and NNuNet).
 4. Restart Slicer when prompted.
 5. The module appears under the **Segmentation** category in the module dropdown, named **Aorta Segmentation**.
 
@@ -32,14 +30,14 @@ This extension isn't published in the Slicer Extension Manager yet, so install i
 3. Under **Inputs**, select your MRI volume as the **Input MRI volume**.
 4. Under **Outputs**, select or create a segmentation node for the **Output segmentation**.
 5. Click **Apply**.
-6. First run only: you'll be prompted to confirm downloading dependencies (PyTorch + nnU-Net) and the model weights. Approve this — it only happens once.
+6. First run only: the module downloads the pretrained model weights (~100 MB). This requires internet connection and happens once.
 7. The status label shows progress while inference runs (typically a few minutes; longer on CPU). When done, a segment named **Aorta** appears in your output segmentation node, with a 3D surface generated automatically.
 
 ### Notes
 
 - Only one volume is processed per run.
 - The model expects a single-channel MRI volume; other modalities or multi-channel input aren't supported.
-- If dependency installation fails, check your internet connection and available disk space, then click Apply again — it retries the same check.
+- Inference speed depends on hardware: GPU (NVIDIA CUDA) runs in ~2-5 minutes; CPU-only runs in ~10+ minutes.
 
 ## How the model was trained
 
