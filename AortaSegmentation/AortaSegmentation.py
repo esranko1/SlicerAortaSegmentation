@@ -181,18 +181,30 @@ class AortaSegmentationLogic(ScriptedLoadableModuleLogic):
     def getParameterNode(self):
         return AortaSegmentationParameterNode(super().getParameterNode())
 
-    def _ensureDependencies(self):
-        """Ensures PyTorch and nnU-Net are available via their Slicer extensions."""
+    def _ensureDependencies(self, statusCallback=None) -> None:
+        """Installs PyTorch and nnU-Net via the PyTorch and NNUNet Slicer extensions if missing."""
         try:
-            import torch  
-            import nnunetv2
-        except ImportError as e:
+            import SlicerNNUNetLib
+        except ModuleNotFoundError as e:
+            raise RuntimeError(
+                _("This module requires the NNUNet extension. Please install it from the Extensions Manager.")
+            ) from e
+
+        installLogic = SlicerNNUNetLib.InstallLogic(doAskConfirmation=True)
+        if statusCallback:
+            installLogic.progressInfo.connect(statusCallback)
+
+        if not installLogic.setupPythonRequirements("nnunetv2"):
+            raise RuntimeError(
+                _("Failed to install PyTorch/nnU-Net. See the Slicer Python console for details.")
+            )
+        if installLogic.needsRestart:
             raise RuntimeError(
                 _(
-                    "This module requires PyTorch and NNuNet extensions. "
-                    "Please install them from the Extensions Manager."
+                    "3D Slicer needs to be restarted to finish installing the PyTorch extension. "
+                    "Please restart Slicer and click Apply again."
                 )
-            ) from e
+            )
 
     def _ensureModel(self) -> Path:
         """Downloads and caches the trained nnU-Net model folder, returns its path."""
@@ -264,7 +276,7 @@ class AortaSegmentationLogic(ScriptedLoadableModuleLogic):
 
         startTime = time.time()
         status(_("Checking dependencies..."))
-        self._ensureDependencies()
+        self._ensureDependencies(statusCallback=status)
 
         status(_("Checking model weights..."))
         modelFolder = self._ensureModel()
